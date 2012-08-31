@@ -5,12 +5,14 @@ Using Emacs Lisp for CGI scripting
 
 A simple library for the Common Gateway Interface for Emacs,
 allowing you to service requests for non static web pages in elisp.
+Provides routines for decoding arguments to GET- and POST-type CGI
+requests.
 
 A sample of elisp CGI script is like below, place it in your
 web server's CGI directory (typically called something like
 /var/www/cgi-bin/):
 
-```elisp
+```Emacs Lisp
 #!/usr/local/bin/emacs --script
 
 (princ "Content-Type: text/html; charset=UTF-8\r\n\r\n")
@@ -19,7 +21,7 @@ web server's CGI directory (typically called something like
 
 Usage: a fabonacci sample.
 
-```elisp
+```Emacs Lisp
 #!/usr/local/bin/emacs --script
 
 (require 'cgi)
@@ -30,7 +32,7 @@ Usage: a fabonacci sample.
   (meta (http-equiv . "Content-Type")
         (content . "text/html; charset=UTF-8")))
  (body
-  (form
+  (form (method . post)
    (span "n = ")
    (input (type . text) (name . n))
    (button (type . submit) "Submit"))
@@ -43,8 +45,8 @@ Usage: a fabonacci sample.
    (tbody
     <%
     (let ((a 0) (b 1) x)
-      (dotimes (i (string-to-int
-                   (or (cgi-get "n") "15")))
+      (dotimes (i (string-to-number
+                   (or (cgi/param "n") "15")))
         (tr
          (td <%= (1+ i) %>)
          (td <%= (setq x a a b b (+ x b)) %>))))
