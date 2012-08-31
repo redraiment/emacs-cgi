@@ -52,3 +52,7 @@ Usage: a fabonacci sample.
          (td <%= (setq x a a b b (+ x b)) %>))))
     %>))))
 ```
+
+Screen-shot
+
+![Screenshot](http://github.com/usr/repository/redraiment/master/fabonacci.png)
