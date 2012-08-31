@@ -55,4 +55,4 @@ Usage: a fabonacci sample.
 
 Screen-shot
 
-![Screenshot](http://github.com/usr/repository/redraiment/master/fabonacci.png)
+![Screenshot](https://raw.github.com/redraiment/emacs-cgi/master/fabonacci.png)
