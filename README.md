@@ -12,7 +12,7 @@ A sample of elisp CGI script is like below, place it in your
 web server's CGI directory (typically called something like
 /var/www/cgi-bin/):
 
-```Emacs Lisp
+```Lisp
 #!/usr/local/bin/emacs --script
 
 (princ "Content-Type: text/html; charset=UTF-8\r\n\r\n")
@@ -21,7 +21,7 @@ web server's CGI directory (typically called something like
 
 Usage: a fabonacci sample.
 
-```Emacs Lisp
+```Lisp
 #!/usr/local/bin/emacs --script
 
 (require 'cgi)
