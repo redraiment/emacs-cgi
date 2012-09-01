@@ -82,13 +82,6 @@ Accept (key) and (key . value)."
       (format "%s=\"%s\"" (car plist) (cdr plist))
     (format "%s" (car plist))))
 
-(defun xml/string-to-attr (s)
-  (let ((idx (string-match "=" s)))
-    (if idx
-        (cons (substring s 0 idx)
-              (substring s (1+ idx)))
-      (list s))))
-
 ;; Convert
 (defun xml/gen (sexp)
   "Convert a S-EXP to XML string.

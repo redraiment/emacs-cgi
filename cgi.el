@@ -43,11 +43,18 @@ One year for seconds by default."
   "Expire the cookie by key."
   (cgi/cookie key "" -100))
 
+(defun cgi/string-to-cookie (s)
+  (let ((idx (string-match "=" s)))
+    (if idx
+        (cons (substring s 0 idx)
+              (substring s (1+ idx)))
+      (list s))))
+
 ; Parse Cookies
 (let ((s (getenv "HTTP_COOKIE")))
   (when (and (stringp s) (< 0 (length s)))
     (dolist (c (split-string s ";[[:space:]]*"))
-      (let ((plist (xml/string-to-attr c)))
+      (let ((plist (cgi/string-to-cookie c)))
         (cgi/cookie (car plist) (cdr plist))))))
 
 ;; HTTP
