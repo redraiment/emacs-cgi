@@ -30,7 +30,7 @@
 (defun cgi/cookie (key &optional value seconds)
   "Get value from http cookie by key when value is ignore.
 Set key = value to cookie when value is not nil.
-One day for seconds by default."
+One year for seconds by default."
   (if value
       (puthash
        key

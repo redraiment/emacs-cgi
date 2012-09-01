@@ -22,6 +22,8 @@ web server's CGI directory (typically called something like
 Usage: a fabonacci sample.
 
 ```Lisp
+#!/usr/local/bin/emacs --script
+
 (require 'cgi)
 
 (cgi/cookie "n"
