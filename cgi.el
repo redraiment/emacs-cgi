@@ -1,7 +1,7 @@
 ;;; cgi.el -- using Emacs Lisp for CGI scripting
 ;;;
 ;;; Author: Zhang, Zepeng (Joe) <redraiment@gmail.com>
-;;; version: 0.1
+;;; version: 0.2
 ;;; Time-stamp: <2012-08-31 CST>
 ;;; Copyright: (C) 2012 Zhang, Zepeng
 
@@ -22,11 +22,69 @@
 
 (require 'xml-generator)
 
+;; Cookie
+
+(defvar cgi/cookies (make-hash-table :test #'equal)
+  "HTTP cookies map")
+
+(defun cgi/cookie (key &optional value seconds)
+  "Get value from http cookie by key when value is ignore.
+Set key = value to cookie when value is not nil.
+One day for seconds by default."
+  (if value
+      (puthash
+       key
+       (cons value (or seconds 31536000))
+       cgi/cookies)
+    (let ((value (gethash key cgi/cookies)))
+      (car value))))
+
+(defun cgi/remove-cookie (key)
+  "Expire the cookie by key."
+  (cgi/cookie key "" -100))
+
+; Parse Cookies
+(let ((s (getenv "HTTP_COOKIE")))
+  (when (and (stringp s) (< 0 (length s)))
+    (dolist (c (split-string s ";[[:space:]]*"))
+      (let ((plist (xml/string-to-attr c)))
+        (cgi/cookie (car plist) (cdr plist))))))
+
 ;; HTTP
+
+(defvar cgi/http-host (getenv "HTTP_HOST")
+  "HTTP Hostname")
+
+(defun cgi/http-GMT (&optional time)
+  "Returns formatted date-time on GMT.
+TIME is specified as (HIGH LOW USEC PSEC), as returned by
+`current-time' or `file-attributes'.  The obsolete form (HIGH . LOW)
+is also still accepted."
+  (let ((system-time-locale "C"))
+    (format-time-string
+     "%a, %d %b %Y %H:%M:%S GMT"
+     (or time (current-time)) t)))
+
+(defun cgi/http-set-cookie ()
+  (let ((content ""))
+    (maphash
+     (lambda (key value)
+       (setq content (concat content
+         (format
+          "Set-Cookie: %s=%s; path=/; expires=%s\n"
+          key (car value)
+          (cgi/http-GMT
+           (time-add (current-time)
+                     (seconds-to-time (cdr value))))))))
+     cgi/cookies)
+    content))
 
 (defun cgi/http-head ()
   "HTML always"
-  "Content-Type: text/html; charset=UTF-8\n\n")
+  (concat
+   "Content-Type: text/html; charset=UTF-8\n"
+   (cgi/http-set-cookie)
+   "\n"))
 
 ;; DOM
 
@@ -153,9 +211,6 @@ into \"name=Zhang%2C+Joe&age=23\""
        (if (equal key (car cell))
            (cdr cell)))
      cgi/parameters)))
-
-;; Cookie
-; TODO
 
 ;; Session
 ; TODO

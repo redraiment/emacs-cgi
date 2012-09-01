@@ -4,6 +4,11 @@
 
 (require 'cgi)
 
+(cgi/cookie "n"
+ (or (cgi/param "n")
+     (cgi/cookie "n")
+     "15"))
+
 (html
  (head
   (title "Fabonacci 1 -&gt; n")
@@ -24,7 +29,7 @@
     <%
     (let ((a 0) (b 1) x)
       (dotimes (i (string-to-number
-                   (or (cgi/param "n") "15")))
+                   (cgi/cookie "n")))
         (tr
          (td <%= (1+ i) %>)
          (td <%= (setq x a a b b (+ x b)) %>))))
