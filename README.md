@@ -5,8 +5,15 @@ Using Emacs Lisp for CGI scripting
 
 A simple library for the Common Gateway Interface for Emacs,
 allowing you to service requests for non static web pages in elisp.
-Provides routines for decoding arguments to GET- and POST-type CGI
-requests, access Cookie and Session, and generate HTML by sexp.
+
+Features:
+* Generate HTML by sexp;
+* Support nested script-lets;
+* Decode arguments to GET- and POST-type CGI requests;
+* Access Cookie;
+* Access Session;
+* Include sub-pages;
+* Redirect/Forward url.
 
 A sample of elisp CGI script is like below, place it in your
 web server's CGI directory (typically called something like

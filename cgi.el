@@ -22,6 +22,9 @@
 
 (require 'xml-generator)
 
+(defvar cgi/context 'root
+  "The runtime context of sexp in CGI.")
+
 (defun cgi/string-to-plist (s)
   (let ((idx (string-match "=" s)))
     (if idx
@@ -173,19 +176,16 @@ is also still accepted."
 
 (defmacro html (&rest args)
   "With HTML 4.01 DTD"
-  `(princ
-    (concat
-     ,(cgi/http-head)
-     ,cgi/html401-dtd
-     (xml/gen '(html ,@args)))))
-
-(defmacro xhtml (&rest args)
-  "With XHTML 1.0 DTD"
-  `(princ
-    (concat
-     ,(cgi/http-head)
-     ,cgi/xhtml10-dtd
-     (xml/gen '(html ,@args)))))
+  `(let* ((cgi/context 'html)
+          (content
+           (catch 'location
+             (concat
+              ,(cgi/http-head)
+              ,cgi/html401-dtd
+              (xml/gen '(html ,@args))))))
+     (if (stringp content)
+         (princ content)
+       (kill-emacs 0))))
 
 (defmacro cgi/register-tag (&rest tags)
   `(progn
@@ -280,5 +280,45 @@ into \"name=Zhang%2C+Joe&age=23\""
        (if (equal key (car cell))
            (cdr cell)))
      cgi/parameters)))
+
+;; URL Redirection
+
+(defun cgi/server-path (path)
+  "Returns the relative path on server."
+  (if (file-name-absolute-p path)
+      (file-relative-name
+       path
+       (file-name-directory
+        (getenv "REQUEST_URI")))
+    path))
+
+(defun cgi/include (path)
+  "Load sub page by path."
+  (load-file (cgi/server-path path)))
+
+(defun cgi/redirect (url)
+  "Redirect to url.
+The url will be changed in browser and the request
+info would be ignore."
+  (let ((content (concat "Location: " url "\n\n")))
+    (if (eq cgi/context 'root)
+        (progn
+          (princ content)
+          (kill-emacs 0))
+      (throw 'location content))))
+
+(defun cgi/forward (path)
+  "Forward to path with request info.
+The url won't be changed in browser."
+  (cgi/include path)
+  (if (eq cgi/context 'root)
+      (kill-emacs 0)
+    (throw 'location nil)))
+
+;; attributes on page, request, appliction scopes
+; TODO
+
+;; session file lock
+; TODO
 
 (provide 'cgi)
