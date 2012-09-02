@@ -22,6 +22,13 @@
 
 (require 'xml-generator)
 
+(defun cgi/string-to-plist (s)
+  (let ((idx (string-match "=" s)))
+    (if idx
+        (cons (substring s 0 idx)
+              (substring s (1+ idx)))
+      (list s))))
+
 ;; Cookie
 
 (defvar cgi/cookies (make-hash-table :test #'equal)
@@ -43,19 +50,74 @@ One year for seconds by default."
   "Expire the cookie by key."
   (cgi/cookie key "" -100))
 
-(defun cgi/string-to-cookie (s)
-  (let ((idx (string-match "=" s)))
-    (if idx
-        (cons (substring s 0 idx)
-              (substring s (1+ idx)))
-      (list s))))
-
 ; Parse Cookies
 (let ((s (getenv "HTTP_COOKIE")))
   (when (and (stringp s) (< 0 (length s)))
     (dolist (c (split-string s ";[[:space:]]*"))
-      (let ((plist (cgi/string-to-cookie c)))
+      (let ((plist (cgi/string-to-plist c)))
         (cgi/cookie (car plist) (cdr plist))))))
+
+;; Session
+
+(defconst cgi/session-key "EmacsLispCGISessionID"
+  "Cookie name for session id.")
+
+(defconst cgi/session-path "/home/www-data/session/"
+  "The local path to save session data.
+You have to change it to your own.")
+
+(defconst cgi/session-timeout 600
+  "Default timeout in seconds for session.")
+
+(defun cgi/uuid ()
+  "Retuns a unique string."
+  (md5
+   (format
+    "%s%s%s%s%s%d"
+    cgi/session-key
+    (getenv "REMOTE_ADDR")
+    (getenv "REMOTE_PORT")
+    (getenv "HTTP_USER_AGENT")
+    (format-time-string "%c")
+    (random))))
+
+(defun cgi/session-id ()
+  "Returns current session id."
+  (let ((id (or (cgi/cookie cgi/session-key)
+                (cgi/uuid))))
+    ; refresh session expire time
+    (cgi/cookie cgi/session-key id cgi/session-timeout)
+    id))
+
+(defun cgi/session-file ()
+  "Returns local file path for current session."
+  (concat cgi/session-path (cgi/session-id)))
+
+(defvar cgi/sessions (make-hash-table :test #'equal)
+  "HTTP session map.")
+
+(defun cgi/session (key &optional value)
+  "Get or set session values."
+  (if value
+      (with-temp-file (cgi/session-file)
+        (puthash key value cgi/sessions)
+        (insert (prin1-to-string cgi/sessions)))
+    (gethash key cgi/sessions)))
+
+(defun cgi/remove-session (key)
+  (remhash key cgi/sessions)
+  (with-temp-file (cgi/session-file)
+    (insert (prin1-to-string cgi/sessions))))
+
+; Load session info
+(if (file-readable-p (cgi/session-file))
+    (setq
+     cgi/sessions
+     (car
+      (read-from-string
+       (with-temp-buffer
+         (insert-file-contents (cgi/session-file))
+         (buffer-string))))))
 
 ;; HTTP
 
@@ -171,7 +233,7 @@ into ((name . \"Zhang, Joe\") (age . 23))"
   (if (and (stringp url) (< 0 (length url)))
       (mapcar
        (lambda (param)
-         (let ((attr (xml/string-to-attr param)))
+         (let ((attr (cgi/string-to-plist param)))
            (cons (car attr)
                  (cgi/decode (cdr attr)))))
        (split-string url "&"))))
@@ -218,8 +280,5 @@ into \"name=Zhang%2C+Joe&age=23\""
        (if (equal key (car cell))
            (cdr cell)))
      cgi/parameters)))
-
-;; Session
-; TODO
 
 (provide 'cgi)
