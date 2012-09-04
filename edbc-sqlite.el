@@ -127,3 +127,5 @@ of `sqlite/with-connect' only. Use can use backquote to refer sexp."
            (setf ,var-result (progn ,@body))
            (process-send-string ,var-pid ".quit\n")))
        ,var-result)))
+
+(provide 'edbc-sqlite)
