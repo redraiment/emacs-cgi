@@ -1,7 +1,6 @@
 ;;; xml-generator.el -- convert list to XML string
 ;;;
 ;;; Author: Zhang, Zepeng (Joe) <redraiment@gmail.com>
-;;; version: 0.1
 ;;; Time-stamp: <2012-08-31 CST>
 ;;; Copyright: (C) 2012 Zhang, Zepeng (Joe)
 
@@ -52,11 +51,12 @@
 
 ;; Escape
 (defconst xml/escapees
-  '(("&"  . "&amp;")
-    ("'"  . "&apos;")
+  '(("&" . "&amp;")
+    ("'" . "&apos;")
     ("\"" . "&quot;")
-    ("<"  . "&lt;")
-    (">"  . "&gt;"))
+    ("<" . "&lt;")
+    (">" . "&gt;")
+    (" " . "&nbsp;"))
   "List of (find . replace) pairs for escaping.")
 
 (defun xml/string-escape (content)
@@ -71,10 +71,10 @@
 ;; Attribute
 (defun xml/attrp (plist)
   "Predicate for XML attributs.
-Accept (key) and (key . value)."
+Only Accept (key . value)."
   (and (consp plist)
        (atom (car plist))
-       (atom (cdr plist))))
+       (not (listp (cdr plist)))))
 
 (defun xml/attr-to-string (plist)
   "Convert a plist to xml style attributes."
