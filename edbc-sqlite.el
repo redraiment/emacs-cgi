@@ -24,14 +24,16 @@
 ;; Assume that there is a Sqlite DB named `users.db' and it has one
 ;; table named `users', which contains id and name two fields.
 
-;; (sqlite/with-connect "/home/redraiment/workspace/sqlite/users.db"
-;;   (let ((name "Joe"))
+;; (sqlite/with-connect "users.db"
+;;   (let ((id 1)
+;;         (name "Joe")
+;;         (nickname "redraiment"))
 ;;     ; purge table
 ;;     (db/delete from users)
 ;;     ; Equals run insert into users (name) values ('Joe') on sqlite
-;;     (db/insert into users (name) values (,name))
+;;     (db/insert into users (id, name) values (:id, :name))
 ;;     ; Equals run (db/update users set name = 'redraiment' where name = 'Joe' on sqlite
-;;     (db/update users set name = "redraiment" where name = ,name)
+;;     (db/update users set name = : nickname where id = :(identity id))
 ;;     ; Returns ((("id" . "1") ("name" . "redraiment")))
 ;;     (db/select * from users)))
 
@@ -52,23 +54,37 @@
 It will append ;\\n end of line."
   (flet ((sexp-convert (sql)
           (cond
+           ((eq sql ':)
+            (setf eval-content? t)
+            "")
+           ((keywordp sql)
+            (sexp-convert
+             (symbol-value
+              (intern (substring (symbol-name sql) 1)))))
+           (eval-content?
+            (setf eval-content? nil)
+            (sexp-convert
+             (if (symbolp sql)
+                 (symbol-value sql)
+               (eval sql))))
            ((stringp sql)
             (format
              "'%s'"
              (replace-regexp-in-string "'" "''" sql)))
            ((consp sql)
-            (concat
-             "("
-             (mapconcat #'sexp-convert sql " ")
-             ")"))
-           (t (prin1-to-string sql)))))
-    (concat (substring (sexp-convert sexp) 1 -1) ";\n")))
+            (let ((statement (mapconcat #'sexp-convert sql " ")))
+              (if (eq (car sql) '\,)
+                  statement
+                (concat "(" statement ")"))))
+           (t (format "%s" sql)))))
+    (let ((eval-content? nil))
+      (concat (substring (sexp-convert sexp) 1 -1) ";\n"))))
 
 (defmacro sqlite/with-connect (url &rest body)
   "Connect sqlite database by url.
 In body, you can use `db/select' to query, `db/insert' to add and
 `db/update' to modify. All those three operators can use inside
-of `sqlite/with-connect' only. Use can use backquote to refer sexp."
+of `sqlite/with-connect' only. Use can use `:' to refer sexp."
   (let ((var-pid (gensym "pid"))
         (var-result (gensym "result"))
         (var-trim (gensym "trim"))
@@ -106,24 +122,24 @@ of `sqlite/with-connect' only. Use can use backquote to refer sexp."
                   (erase-buffer)
                   (process-send-string
                    ,',var-pid
-                   (sqlite/sexp-to-command (backquote (select ,@args))))
+                   (sqlite/sexp-to-command '(select ,@args)))
                   (accept-process-output ,',var-pid)
                   (,',var-parse (buffer-substring 1 (buffer-size)))))
               (db/update
                (&rest args)
                `(process-send-string
                  ,',var-pid
-                 (sqlite/sexp-to-command (backquote (update ,@args)))))
+                 (sqlite/sexp-to-command '(update ,@args))))
               (db/insert
                (&rest args)
                `(process-send-string
                  ,',var-pid
-                 (sqlite/sexp-to-command (backquote (insert ,@args)))))
+                 (sqlite/sexp-to-command '(insert ,@args))))
               (db/delete
                (&rest args)
                `(process-send-string
                  ,',var-pid
-                 (sqlite/sexp-to-command (backquote (delete ,@args))))))
+                 (sqlite/sexp-to-command '(delete ,@args)))))
            (setf ,var-result (progn ,@body))
            (process-send-string ,var-pid ".quit\n")))
        ,var-result)))
