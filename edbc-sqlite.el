@@ -28,11 +28,11 @@
 ;;   (let ((id 1)
 ;;         (name "Joe")
 ;;         (nickname "redraiment"))
-;;     ; purge table
+;;     ; Purge table
 ;;     (db/delete from users)
-;;     ; Equals run insert into users (name) values ('Joe') on sqlite
+;;     ; Equals insert into users (id, name) values (1, 'Joe') on sqlite
 ;;     (db/insert into users (id, name) values (:id, :name))
-;;     ; Equals run (db/update users set name = 'redraiment' where name = 'Joe' on sqlite
+;;     ; Equals update users set name = 'redraiment' where id = 1 on sqlite
 ;;     (db/update users set name = : nickname where id = :(identity id))
 ;;     ; Returns ((("id" . "1") ("name" . "redraiment")))
 ;;     (db/select * from users)))
