@@ -11,7 +11,8 @@ Features:
 * Access Cookie;
 * Access Session;
 * `Include' instruction to load sub-pages;
-* Redirect/Forward instruction for page jump.
+* Redirect/Forward instruction for page jump;
+* Access Database with ![EDBC](https://github.com/redraiment/edbc).
 
 Here is a sample for elisp CGI script, place it in your web server's
 CGI directory (typically called something like /var/www/cgi-bin/):
