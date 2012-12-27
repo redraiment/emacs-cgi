@@ -1,33 +1,27 @@
-emacs-cgi
+Emacs-CGI
 =========
 
-Using Emacs Lisp for CGI scripting
-
-A simple library for the Common Gateway Interface for Emacs,
+A simple library of the Common Gateway Interface for Emacs-lisp,
 allowing you to service requests for non static web pages in elisp.
 
 Features:
-* Generate HTML by sexp;
-* Support nested script-lets;
-* Decode arguments to GET- and POST-type CGI requests;
+* Generate dynamic page with ![EML](https://github.com/redraiment/eml);
+* Embed elisp as script-lets (just like JSP, PHP, etc.);
+* Decode parameters from GET- and POST-type CGI requests;
 * Access Cookie;
 * Access Session;
-* Include sub-pages;
-* Redirect/Forward url.
+* `Include' instruction to load sub-pages;
+* Redirect/Forward instruction for page jump.
 
-A sample of elisp CGI script is like below, place it in your
-web server's CGI directory (typically called something like
-/var/www/cgi-bin/):
-
+Here is a sample for elisp CGI script, place it in your web server's
+CGI directory (typically called something like /var/www/cgi-bin/):
 ```Lisp
 #!/usr/local/bin/emacs --script
 
 (princ "Content-Type: text/html; charset=UTF-8\r\n\r\n")
 (princ "<h1>Hello Emacs Lisp</h1>\n")
 ```
-
 A fabonacci sample.
-
 ```Lisp
 #!/usr/local/bin/emacs --script
 
@@ -64,7 +58,6 @@ A fabonacci sample.
          (td <%= (setq x a a b b (+ x b)) %>))))
     %>))))
 ```
-
 Screen-shot
 
 ![Screenshot](https://raw.github.com/redraiment/emacs-cgi/master/sample/fabonacci/fabonacci.png)
